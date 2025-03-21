@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.16",
+    "@whiskeysockets/baileys": "^6.5.0",
     "chalk": "^4.1.2",
     "figlet": "^1.8.0",
     "prompt-sync": "^4.2.0"
