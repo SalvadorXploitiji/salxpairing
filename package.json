@@ -1,20 +1,22 @@
 {
-  "name": "salxpairing",
+  "name": "workspace",
   "version": "1.0.0",
-  "description": "Bot WhatsApp Pairing Code - SALXPairing v1.0",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
   "dependencies": {
-    "@whiskeysockets/baileys": "6.5.0",
-    "prompt-sync": "4.2.0",
-    "chalk": "4.1.2",
-    "figlet": "1.5.2"
-  },
-  "engines": {
-    "node": ">=14"
-  },
-  "author": "SalvadorXploitiji",
-  "license": "MIT"
+    "axios": "^1.8.4",
+    "chalk": "^4.1.2",
+    "figlet": "^1.8.0",
+    "gradient-string": "^3.0.0",
+    "moment": "^2.30.1",
+    "ora": "^8.2.0",
+    "random-useragent": "^0.5.0",
+    "tunnel": "^0.0.6"
+  }
 }
