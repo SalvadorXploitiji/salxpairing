@@ -1,12 +1,12 @@
 
-   const axios = require('axios');
-const userAgent = require('random-useragent');
-const tunnel = require('tunnel');
-const chalk = require('chalk');
-const ora = require('ora');
-const figlet = require('figlet');
-const gradient = require('gradient-string');
-const moment = require('moment');
+   import axios from 'axios';
+import userAgent from 'random-useragent';
+import tunnel from 'tunnel';
+import chalk from 'chalk';
+import ora from 'ora';
+import figlet from 'figlet';
+import gradient from 'gradient-string';
+import moment from 'moment';
 
 const sqlPayloads = [
     "' OR 1=1 --", "\" OR 1=1 --", "' UNION SELECT null, null, null --",
